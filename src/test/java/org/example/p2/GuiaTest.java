@@ -25,6 +25,7 @@ public class GuiaTest {
     public void setUp() {
         ChromeOptions options = new ChromeOptions();
         options.setBinary("/usr/bin/chromium");
+        options.addArguments("--start-maximized");
 
         boolean hasDisplay = System.getenv("DISPLAY") != null || System.getenv("WAYLAND_DISPLAY") != null;
         boolean headless = Boolean.parseBoolean(System.getProperty("headless", Boolean.toString(!hasDisplay)));
@@ -33,7 +34,6 @@ public class GuiaTest {
         }
 
         driver = new ChromeDriver(options);
-        driver.manage().window().maximize();
         driver.get("https://www.saucedemo.com/");
     }
 
@@ -69,13 +69,16 @@ public class GuiaTest {
         Assert.assertEquals(pageTitle, "Products", "el titulo despues del login no es el esperado.");
     }
 
-    //prueba 4: agregar un producto usando id y validar el carrito con class name.
+    //prueba 4: agregar un producto, abrir el carrito y validar su nombre.
     @Test(priority = 4, dependsOnMethods = "loginShowsProductsTitle")
     public void addBackpackToCart() {
         driver.findElement(By.id("add-to-cart-sauce-labs-backpack")).click();
+        
+        driver.findElement(By.className("shopping_cart_link")).click();
+        String productName = driver.findElement(By.className("inventory_item_name")).getText();
 
-        WebElement cartBadge = driver.findElement(By.className("shopping_cart_badge"));
-        Assert.assertEquals(cartBadge.getText(), "1", "el carrito deberia tener un producto.");
+        Assert.assertEquals(productName, "Sauce Labs Backpack", "el producto del carrito no es el esperado.");
+        System.out.println("producto agregado al carrito: " + productName);
     }
 
     //prueba 5: extraer y validar un atributo del enlace del carrito.
@@ -101,6 +104,7 @@ public class GuiaTest {
     //prueba 7: desplazar la pagina hasta el pie usando javascriptexecutor.
     @Test(priority = 7, dependsOnMethods = "cartBadgeBecomesVisible")
     public void scrollToFooter() {
+        driver.findElement(By.id("continue-shopping")).click();
         WebElement footer = driver.findElement(By.tagName("footer"));
         JavascriptExecutor javascript = (JavascriptExecutor) driver;
         javascript.executeScript("arguments[0].scrollIntoView({block: 'center'});", footer);
